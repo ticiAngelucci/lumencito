@@ -13,7 +13,6 @@ const AboutSection = () => {
         background: "#F3F9E3",
       }}
     >
-      {/* Título y descripción */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -37,7 +36,6 @@ const AboutSection = () => {
         </Typography>
       </motion.div>
 
-      {/* Contenido principal */}
       <Grid
         container
         spacing={6}
@@ -100,8 +98,6 @@ const AboutSection = () => {
           </motion.div>
         </Grid>
 
-
-        {/* Imagen */}
         <Grid item xs={12} md={8}>
           <motion.div
             initial={{ opacity: 0, x: 50 }}

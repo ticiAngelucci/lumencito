@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Box, Typography, Button, Stack } from "@mui/material";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import AddIcon from "@mui/icons-material/Add";
 import { motion } from "framer-motion";
+import { useStellarWallet } from "../services/useStellarWallet";
 
 const HeroSection = ({ onCreateProject }) => {
   const scrollToProjects = () => {
@@ -12,6 +13,7 @@ const HeroSection = ({ onCreateProject }) => {
     }
   };
 
+  const { address, error, connectWallet, disconnectWallet } = useStellarWallet();
   return (
     <Box
       id="inicio"
@@ -27,7 +29,6 @@ const HeroSection = ({ onCreateProject }) => {
         justifyContent: "center",
       }}
     >
-      {/* Título animado */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -59,7 +60,6 @@ const HeroSection = ({ onCreateProject }) => {
         </Typography>
       </motion.div>
 
-      {/* Subtítulo animado */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -80,7 +80,6 @@ const HeroSection = ({ onCreateProject }) => {
         </Typography>
       </motion.div>
 
-      {/* Botones animados */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -114,7 +113,7 @@ const HeroSection = ({ onCreateProject }) => {
           <Button
             variant="outlined"
             size="large"
-            onClick={onCreateProject}
+            onClick={connectWallet}
             startIcon={<AddIcon />}
             sx={{
               fontWeight: "bold",
@@ -130,6 +129,27 @@ const HeroSection = ({ onCreateProject }) => {
           >
             Crear Proyecto
           </Button>
+          <Box>
+            {error && (
+              <Typography color="error" variant="body2" sx={{ mb: 1 }}>
+                {error}
+              </Typography>
+            )}
+            {!address ? (
+              <Button variant="contained" color="secondary" onClick={connectWallet}>
+                Conectar Wallet
+              </Button>
+            ) : (
+              <Box>
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  Conectado: {address.slice(0, 6)}…{address.slice(-4)}
+                </Typography>
+                <Button size="small" onClick={disconnectWallet}>
+                  Desconectar
+                </Button>
+              </Box>
+            )}
+          </Box>
         </Stack>
       </motion.div>
     </Box>

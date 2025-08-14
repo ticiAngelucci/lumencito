@@ -34,7 +34,7 @@ const Header = () => {
     { text: "Quiénes Somos", id: "quienes-somos" },
     { text: "Proyectos", id: "proyectos" },
     { text: "Subir Proyecto", id: "subir-proyecto" },
-    { text: "Moderación", href: "moderacion.html" },
+   // { text: "Moderación", href: "moderacion.html" },
   ];
 
   return (
@@ -73,7 +73,6 @@ const Header = () => {
             </Typography>
           </Box>
 
-          {/* Menú Desktop */}
           <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3 }}>
             {menuItems.map((item) =>
               item.href ? (
