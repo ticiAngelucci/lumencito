@@ -1,37 +1,58 @@
 import React, { useState, useEffect } from 'react';
+import { useStellarWallet } from '../services/useStellarWallet';
 
-const DonateModal = ({ isOpen, onClose, project, onDonate }) => {
+const DonateModal = ({ isOpen, onClose, project }) => {
+  const { address, connectWallet } = useStellarWallet();
   const [amount, setAmount] = useState('');
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [message, setMessage] = useState('');
+  const [donated, setDonated] = useState(false);
+  const [donationPending, setDonationPending] = useState(false);
 
   const predefinedAmounts = [5, 10, 15, 25, 50];
 
   useEffect(() => {
     if (!project) return;
     const currentAmount = selectedAmount || amount;
-    if (currentAmount) {
-      setMessage(`Vas a donar $${currentAmount} al proyecto "${project.title}".`);
-    } else {
-      setMessage('');
-    }
+    setMessage(
+      currentAmount
+        ? `Vas a donar $${currentAmount} al proyecto "${project.title}".`
+        : ''
+    );
   }, [selectedAmount, amount, project]);
 
-  const handleDonate = () => {
+  useEffect(() => {
+    if (donationPending && address) {
+      setDonated(true);
+      setDonationPending(false);
+    }
+  }, [address, donationPending]);
+
+  const handleDonate = async () => {
     if (!project) return;
     const donation = Number(selectedAmount || amount);
     if (!donation || donation <= 0) return;
-    alert(`¡Felicidades! Has donado $${donation} a "${project.title}" 🎉`);
-    setAmount('');
-    setSelectedAmount(null);
-    setMessage('');
-    onClose();
+
+    if (!address) {
+      try {
+        await connectWallet();
+        setDonationPending(true); 
+        return;
+      } catch (err) {
+        console.error('Error conectando wallet:', err);
+        return;
+      }
+    }
+
+    setDonated(true);
   };
 
   const handleClose = () => {
     setAmount('');
     setSelectedAmount(null);
     setMessage('');
+    setDonated(false);
+    setDonationPending(false);
     onClose();
   };
 
@@ -48,55 +69,77 @@ const DonateModal = ({ isOpen, onClose, project, onDonate }) => {
         </button>
 
         <div className="p-6 space-y-4">
-          <h3 className="text-2xl font-bold text-gray-800 mb-2">Donar a:</h3>
-          <p className="text-gray-700 font-semibold mb-4">{project.title}</p>
-
-          <p className="text-gray-600 mb-2">Selecciona un monto:</p>
-          <div className="flex flex-wrap gap-3 mb-2">
-            {predefinedAmounts.map((amt) => (
+          {donated ? (
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">¡Gracias por tu aporte!</h3>
+              <p className="text-gray-700 mb-4">
+                Has donado <strong>${selectedAmount || amount}</strong> al proyecto <strong>"{project.title}"</strong>.
+              </p>
+              <p className="text-gray-600">
+                Tu contribución está siendo procesada y pronto aparecerá reflejada en la comunidad Stellar DAO.
+              </p>
               <button
-                key={amt}
-                onClick={() => {
-                  setSelectedAmount(amt);
-                  setAmount('');
-                }}
-                className={`flex-1 py-2 rounded-lg font-semibold text-white transition-transform text-center 
-                  ${selectedAmount === amt ? 'bg-gradient-to-r from-orange-500 to-red-600 scale-105' 
-                  : 'bg-gradient-to-r from-orange-400 to-red-500 hover:scale-105'}`}
+                onClick={handleClose}
+                className="mt-4 bg-gradient-to-r from-orange-400 to-red-500 text-white py-2 px-6 rounded-lg font-semibold hover:scale-105 transition-transform"
               >
-                ${amt}
+                Cerrar
               </button>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">Donar a:</h3>
+              <p className="text-gray-700 font-semibold mb-4">{project.title}</p>
 
-          <p className="text-gray-600 mb-2 text-center">O ingresa otro monto:</p>
-          <input
-            type="number"
-            placeholder="Monto personalizado"
-            value={amount}
-            onChange={(e) => {
-              setAmount(e.target.value);
-              setSelectedAmount(null);
-            }}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-2 focus:ring-2 focus:ring-orange-400 focus:outline-none"
-          />
+              <p className="text-gray-600 mb-2">Selecciona un monto:</p>
+              <div className="flex flex-wrap gap-3 mb-2">
+                {predefinedAmounts.map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => {
+                      setSelectedAmount(amt);
+                      setAmount('');
+                    }}
+                    className={`flex-1 py-2 rounded-lg font-semibold text-white text-center transition-transform ${
+                      selectedAmount === amt
+                        ? 'bg-gradient-to-r from-orange-500 to-red-600 scale-105'
+                        : 'bg-gradient-to-r from-orange-400 to-red-500 hover:scale-105'
+                    }`}
+                  >
+                    ${amt}
+                  </button>
+                ))}
+              </div>
 
-          {message && <p className="text-center text-gray-700 font-medium">{message}</p>}
+              <p className="text-gray-600 mb-2 text-center">O ingresa otro monto:</p>
+              <input
+                type="number"
+                placeholder="Monto personalizado"
+                value={amount}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  setSelectedAmount(null);
+                }}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-2 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+              />
 
-          <div className="flex gap-4 mt-2">
-            <button
-              onClick={handleDonate}
-              className="flex-1 bg-gradient-to-r from-orange-400 to-red-500 text-white font-semibold py-3 rounded-lg hover:scale-105 transition-transform"
-            >
-              Donar
-            </button>
-            <button
-              onClick={handleClose}
-              className="flex-1 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              Cancelar
-            </button>
-          </div>
+              {message && <p className="text-center text-gray-700 font-medium">{message}</p>}
+
+              <div className="flex gap-4 mt-2">
+                <button
+                  onClick={handleDonate}
+                  className="flex-1 bg-gradient-to-r from-orange-400 to-red-500 text-white font-semibold py-3 rounded-lg hover:scale-105 transition-transform"
+                >
+                  Donar
+                </button>
+                <button
+                  onClick={handleClose}
+                  className="flex-1 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
